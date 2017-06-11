@@ -4,21 +4,26 @@ package main
 import (
 	"image/color"
 	"log"
+	"math"
 	"runtime"
+	//"strconv"
+	"time"
 
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
 	"github.com/llgcode/draw2d"
 	"github.com/llgcode/draw2d/draw2dgl"
-	"github.com/llgcode/draw2d/draw2dkit"
+	//"github.com/llgcode/draw2d/draw2dkit"
 )
 
 var (
 	// global rotation
 	rotate        int
 	//width, height int
-	width, height = 1024, 1024
-	redraw        = true
+	//width, height = 1024, 1024
+	width, height = 512, 512
+	floatwidth, floatheight = float64(width), float64(height)
+	//redraw        = true
 	font          draw2d.FontData
 )
 
@@ -43,33 +48,14 @@ func reshape(window *glfw.Window, w, h int) {
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 	gl.Disable(gl.DEPTH_TEST)
 	width, height = w, h
-	redraw = true
+	floatwidth, floatheight = float64(width), float64(height)
+	//redraw = true
 }
 
 // Ask to refresh
-func invalidate() {
-	redraw = true
-}
-
-// draws in the window
-func display() {
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-
-	gl.LineWidth(1)
-	gc := draw2dgl.NewGraphicContext(width, height)
-	gc.SetFontData(draw2d.FontData{
-		Name:   "luxi",
-		Family: draw2d.FontFamilyMono,
-		Style:  draw2d.FontStyleBold | draw2d.FontStyleItalic})
-
-	gc.BeginPath()
-	draw2dkit.RoundedRectangle(gc, 200, 200, 600, 600, 100, 100)
-
-	gc.SetFillColor(color.RGBA{0, 200, 0, 0xff})
-	gc.Fill()
-
-	gl.Flush() /* Single buffered, so needs a flush. */
-}
+//func invalidate() {
+	//redraw = true
+//}
 
 func init() {
 	// locks to a particular thread
@@ -82,7 +68,6 @@ func main() {
 		panic(err)
 	}
 	defer glfw.Terminate()
-	//width, height = 800, 800
 	window, err := glfw.CreateWindow(width, height, "Radar", nil, nil)
 	if err != nil {
 		panic(err)
@@ -105,11 +90,11 @@ func main() {
 
 	reshape(window, width, height)
 	for !window.ShouldClose() {
-		if redraw {
-			display()
-			window.SwapBuffers()
-			redraw = false
-		}
+		//if redraw {
+			drawContents(window)
+			//window.SwapBuffers()
+			//redraw = false
+		//}
 		glfw.PollEvents()
 		//		time.Sleep(2 * time.Second)
 	}
@@ -129,3 +114,103 @@ func onKey(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods 
 		w.SetShouldClose(true)
 	}
 }
+
+// draws the contents of the window
+func drawContents(w *glfw.Window) {
+	for i := 0.0; i < 360; i = i + 1 {
+		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+		gl.LineWidth(1)
+
+		gc := draw2dgl.NewGraphicContext(width, height)
+
+		drawRadials(gc, floatwidth, floatheight, floatwidth, floatheight)
+		drawCircles(gc, floatwidth, floatheight, floatwidth, floatheight)
+		drawSweep(gc, floatwidth, floatheight, floatwidth, floatheight, i)
+
+		gl.Flush() /* single buffered, so needs a flush. */
+		w.SwapBuffers()
+		//log.Println("angle: " + strconv.FormatFloat(i, 'f', -1, 32))
+		time.Sleep(5 * time.Millisecond)
+	}
+}
+
+func drawRadials(gc *draw2dgl.GraphicContext, x, y, width, height float64) {
+	gc.Save()
+	gc.Translate(x/2, y/2)
+	gc.SetLineWidth(2)
+	gc.SetStrokeColor(color.RGBA{0, 250, 0, 0xff})
+	for i := 0.0; i < 360; i = i + 45 { // go from 0 to 360 degrees in 45 degree steps
+		gc.Save()                        // keep rotations temporary
+		gc.Rotate(i * (math.Pi / 180.0)) // rotate by degrees on stack from 'for'
+		gc.MoveTo(0, 0)
+		if width > height {
+			gc.LineTo(height * 0.5, 0)
+		} else {
+			gc.LineTo(width * 0.5, 0)
+		}
+		gc.Stroke()
+		gc.Restore()
+	}
+	gc.Restore()
+}
+
+func drawCircles(gc *draw2dgl.GraphicContext, xc, yc, width, height float64) {
+//	gc.Save()
+//	gc.Translate(x/2, y/2)
+	gc.SetLineWidth(2)
+	gc.SetStrokeColor(color.RGBA{0, 250, 0, 0xff})
+//	for i := 0.0; i < 360; i = i + 45 { // go from 0 to 360 degrees in 45 degree steps
+//		gc.Save()                        // keep rotations temporary
+//		gc.Rotate(i * (math.Pi / 180.0)) // rotate by degrees on stack from 'for'
+//		gc.MoveTo(0, 0)
+//		if width > height {
+//			gc.LineTo(height * 0.60, 0)
+//		} else {
+//			gc.LineTo(width * 0.60, 0)
+//		}
+//		gc.Stroke()
+//		gc.Restore()
+//	}
+//	gc.Restore()
+
+	var radius float64
+	if width > height {
+		radius = height/2
+	} else {
+		radius = width/2
+	}
+	xc = width/2
+	yc = height/2
+	//radiusX, radiusY := width/2, height/2
+	//radiusX, radiusY := width/2, height/2
+	//startAngle := 0 * (math.Pi / 180.0) /* angles are specified */
+	startAngle := 0.0
+	sweepAngle := 360 * (math.Pi / 180.0)     /* clockwise in radians           */
+//	gc.SetLineWidth(width / 10)
+	gc.SetLineCap(draw2d.ButtCap)
+//	gc.SetStrokeColor(image.Black)
+	for i := 1.0; i > 0; i = i - 0.2 { // reduction factor for concentric circles
+		//gc.MoveTo(xc + math.Cos(startAngle)*radiusX, yc + math.Sin(startAngle)*radiusY)
+		gc.MoveTo(xc + math.Cos(startAngle) * radius, yc + math.Sin(startAngle) * radius)
+		//gc.ArcTo(xc, yc, radiusX, radiusY, startAngle, sweepAngle)
+		gc.ArcTo(xc, yc, radius * i, radius * i, startAngle, sweepAngle)
+		gc.Stroke()
+	}
+}
+
+func drawSweep(gc *draw2dgl.GraphicContext, x, y, width, height, angle float64) {
+	gc.Save()
+	gc.Translate(x/2, y/2)
+	gc.SetLineWidth(1)
+	gc.SetStrokeColor(color.RGBA{0, 250, 0, 0xff})
+	gc.Rotate(angle * (math.Pi / 180.0))
+	gc.MoveTo(0, 0)
+	if width > height {
+		gc.LineTo(height * 0.5, 0)
+	} else {
+		gc.LineTo(width * 0.5, 0)
+	}
+	gc.Stroke()
+	gc.Restore()
+}
+
