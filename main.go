@@ -130,7 +130,7 @@ func drawContents(w *glfw.Window) {
 		gl.Flush() /* single buffered, so needs a flush. */
 		w.SwapBuffers()
 		//log.Println("angle: " + strconv.FormatFloat(i, 'f', -1, 32))
-		time.Sleep(5 * time.Millisecond)
+		time.Sleep(2 * time.Millisecond)
 	}
 }
 
@@ -189,7 +189,7 @@ func drawCircles(gc *draw2dgl.GraphicContext, xc, yc, width, height float64) {
 //	gc.SetLineWidth(width / 10)
 	gc.SetLineCap(draw2d.ButtCap)
 //	gc.SetStrokeColor(image.Black)
-	for i := 1.0; i > 0; i = i - 0.2 { // reduction factor for concentric circles
+	for i := 1.0; i > 0; i = i - 0.3 { // reduction factor for concentric circles
 		//gc.MoveTo(xc + math.Cos(startAngle)*radiusX, yc + math.Sin(startAngle)*radiusY)
 		gc.MoveTo(xc + math.Cos(startAngle) * radius, yc + math.Sin(startAngle) * radius)
 		//gc.ArcTo(xc, yc, radiusX, radiusY, startAngle, sweepAngle)
@@ -199,18 +199,25 @@ func drawCircles(gc *draw2dgl.GraphicContext, xc, yc, width, height float64) {
 }
 
 func drawSweep(gc *draw2dgl.GraphicContext, x, y, width, height, angle float64) {
-	gc.Save()
-	gc.Translate(x/2, y/2)
-	gc.SetLineWidth(1)
-	gc.SetStrokeColor(color.RGBA{0, 250, 0, 0xff})
-	gc.Rotate(angle * (math.Pi / 180.0))
-	gc.MoveTo(0, 0)
-	if width > height {
-		gc.LineTo(height * 0.5, 0)
-	} else {
-		gc.LineTo(width * 0.5, 0)
+	//for i := 0.0; i < 40; i = i + 0.5 {
+	for i := 0; i < 60; i++ {
+		gc.Save()
+		gc.Translate(x/2, y/2)
+		gc.SetLineWidth(1)
+		//gc.SetStrokeColor(color.RGBA{0, 250, 0, 0xff})
+		//gc.SetStrokeColor(color.RGBA{0, 250, 0, uint8(255 - i)})
+		gc.SetStrokeColor(color.RGBA{0, uint8(250 - 3 * i), 0, 0xff})
+		//gc.SetLineDash([]float64{3}, 3)
+		//gc.Rotate((angle - float64(float64(i) * 0.5)) * (math.Pi / 180.0))
+		gc.Rotate((angle - float64(i) * 0.5) * (math.Pi / 180.0))
+		gc.MoveTo(0, 0)
+		if width > height {
+			gc.LineTo(height * 0.5, 0)
+		} else {
+			gc.LineTo(width * 0.5, 0)
+		}
+		gc.Stroke()
+		gc.Restore()
 	}
-	gc.Stroke()
-	gc.Restore()
 }
 
