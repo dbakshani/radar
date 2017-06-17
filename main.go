@@ -175,6 +175,8 @@ func drawContents(w *glfw.Window) {
 		}
 		updateCircles(i)
 
+		drawMaskingCircle(gc, floatwidth, floatheight, floatwidth, floatheight)
+
 		gl.Flush() /* single buffered, so needs a flush. */
 		time.Sleep(2 * time.Millisecond)
 		w.SwapBuffers()
@@ -256,6 +258,25 @@ func drawMovingCircles(gc *draw2dgl.GraphicContext, xc, yc, width, height float6
 //	gc.SetStrokeColor(image.Black)
 	gc.MoveTo(xc + math.Cos(startAngle) * width, yc + math.Sin(startAngle) * height)
 	gc.ArcTo(xc, yc, width, height, startAngle, sweepAngle)
+	gc.Stroke()
+}
+
+func drawMaskingCircle(gc *draw2dgl.GraphicContext, xc, yc, width, height float64) {
+	var radius float64
+	if width > height {
+		radius = height/2
+	} else {
+		radius = width/2
+	}
+	xc = width/2
+	yc = height/2
+	startAngle := 0.0
+	sweepAngle := 360 * (math.Pi / 180.0)     /* clockwise in radians           */
+	gc.SetLineWidth(radius)
+	gc.SetStrokeColor(color.RGBA{0, 0, 0, 0xff})
+	gc.SetLineCap(draw2d.ButtCap)
+	gc.MoveTo(xc + math.Cos(startAngle) * radius, yc + math.Sin(startAngle) * radius)
+	gc.ArcTo(xc, yc, radius + (radius / 2) + 1, radius + (radius / 2) + 1, startAngle, sweepAngle)
 	gc.Stroke()
 }
 
