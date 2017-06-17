@@ -16,14 +16,13 @@ import (
 )
 
 const (
-	numCircles = 20
+	numCircles = 20	//number of moving circles
 )
 
 var (
 	random *rand.Rand
 	width, height = 512, 512
 	floatwidth, floatheight = float64(width), float64(height)
-	font draw2d.FontData
 )
 
 type circle struct {
@@ -91,6 +90,7 @@ func main() {
 
 	reshape(window, width, height)
 
+	// main loop
 	for !window.ShouldClose() {
 		drawContents(window)
 		//window.SwapBuffers()
@@ -114,7 +114,7 @@ func onKey(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods 
 	}
 }
 
-// initializes moving circles
+// initializes position, movement delta, and brightness for moving circles
 func initializeCircles() {
 	for i := 0; i < numCircles; i++ {
 		c := circle{
@@ -171,7 +171,7 @@ func drawContents(w *glfw.Window) {
 		drawSweep(gc, floatwidth, floatheight, floatwidth, floatheight, i)
 
 		for j := range circles {
-			drawMovingCircles(gc, circles[j].xpos, circles[j].ypos, circles[j].radius, circles[j].radius, circles[j].intensity)
+			drawMovingCircle(gc, circles[j].xpos, circles[j].ypos, circles[j].radius, circles[j].radius, circles[j].intensity)
 		}
 		updateCircles(i)
 
@@ -184,6 +184,7 @@ func drawContents(w *glfw.Window) {
 	}
 }
 
+// draws radial lines in radar
 func drawRadials(gc *draw2dgl.GraphicContext, x, y, width, height float64) {
 	gc.Save()
 	gc.Translate(x/2, y/2)
@@ -204,6 +205,7 @@ func drawRadials(gc *draw2dgl.GraphicContext, x, y, width, height float64) {
 	gc.Restore()
 }
 
+// draws concentric circles in radar
 func drawConcentricCircles(gc *draw2dgl.GraphicContext, xc, yc, width, height float64) {
 	gc.SetLineWidth(2)
 	gc.SetStrokeColor(color.RGBA{0, 250, 0, 0xff})
@@ -218,9 +220,7 @@ func drawConcentricCircles(gc *draw2dgl.GraphicContext, xc, yc, width, height fl
 	yc = height/2
 	startAngle := 0.0
 	sweepAngle := 360 * (math.Pi / 180.0)     /* clockwise in radians           */
-//	gc.SetLineWidth(width / 10)
 	gc.SetLineCap(draw2d.ButtCap)
-//	gc.SetStrokeColor(image.Black)
 	for i := 1.0; i > 0; i = i - 0.3 { // reduction factor for concentric circles
 		gc.MoveTo(xc + math.Cos(startAngle) * radius, yc + math.Sin(startAngle) * radius)
 		gc.ArcTo(xc, yc, radius * i, radius * i, startAngle, sweepAngle)
@@ -228,6 +228,7 @@ func drawConcentricCircles(gc *draw2dgl.GraphicContext, xc, yc, width, height fl
 	}
 }
 
+// draws radar sweep
 func drawSweep(gc *draw2dgl.GraphicContext, x, y, width, height float64, angle int) {
 	var length float64
 	if width > height {
@@ -248,19 +249,19 @@ func drawSweep(gc *draw2dgl.GraphicContext, x, y, width, height float64, angle i
 	}
 }
 
-func drawMovingCircles(gc *draw2dgl.GraphicContext, xc, yc, width, height float64, intensity int) {
+// draws circles that move
+func drawMovingCircle(gc *draw2dgl.GraphicContext, xc, yc, width, height float64, intensity int) {
 	gc.SetLineWidth(4)
 	gc.SetStrokeColor(color.RGBA{0, uint8(intensity), 0, 0xff})
 	startAngle := 0.0
 	sweepAngle := 360 * (math.Pi / 180.0)     /* clockwise in radians           */
-//	gc.SetLineWidth(width / 10)
 	gc.SetLineCap(draw2d.ButtCap)
-//	gc.SetStrokeColor(image.Black)
 	gc.MoveTo(xc + math.Cos(startAngle) * width, yc + math.Sin(startAngle) * height)
 	gc.ArcTo(xc, yc, width, height, startAngle, sweepAngle)
 	gc.Stroke()
 }
 
+// draws black circle to mask moving circles that move outside of the outer radar circle
 func drawMaskingCircle(gc *draw2dgl.GraphicContext, xc, yc, width, height float64) {
 	var radius float64
 	if width > height {
@@ -276,7 +277,7 @@ func drawMaskingCircle(gc *draw2dgl.GraphicContext, xc, yc, width, height float6
 	gc.SetStrokeColor(color.RGBA{0, 0, 0, 0xff})
 	gc.SetLineCap(draw2d.ButtCap)
 	gc.MoveTo(xc + math.Cos(startAngle) * radius, yc + math.Sin(startAngle) * radius)
-	gc.ArcTo(xc, yc, radius + (radius / 2) + 1, radius + (radius / 2) + 1, startAngle, sweepAngle)
+	gc.ArcTo(xc, yc, radius + (radius/2) + 1, radius + (radius/2) + 1, startAngle, sweepAngle)
 	gc.Stroke()
 }
 
