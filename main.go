@@ -1,4 +1,3 @@
-// Open an OpenGl window and display a rectangle using a OpenGl GraphicContext
 package main
 
 import (
@@ -25,12 +24,13 @@ var (
 	floatwidth, floatheight = float64(width), float64(height)
 )
 
-type circle struct {
+type Circle struct {
 	xpos, ypos, radius, xdelta, ydelta float64
 	intensity int
+	pauseCounter int
 }
 
-var circles [numCircles]circle
+var circles [numCircles]Circle
 
 // called when the window is reshaped/resized
 func reshape(window *glfw.Window, w, h int) {
@@ -74,6 +74,7 @@ func main() {
 	random = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	window.MakeContextCurrent()
+
 	// set callback for when a window is resized
 	window.SetSizeCallback(reshape)
 	// sets callback for when a key is pressed (not keyboard layout dependent), repeated or released
@@ -81,6 +82,7 @@ func main() {
 	// sets callback for when a key is input (keyboard layout dependent)
 	window.SetCharCallback(onChar)
 
+	// vertical synchronization
 	glfw.SwapInterval(1)
 
 	err = gl.Init()
@@ -88,12 +90,12 @@ func main() {
 		panic(err)
 	}
 
+	// set up initial window
 	reshape(window, width, height)
 
 	// main loop
 	for !window.ShouldClose() {
 		drawContents(window)
-		//window.SwapBuffers()
 		glfw.PollEvents()
 		//time.Sleep(2 * time.Second)
 	}
@@ -117,13 +119,14 @@ func onKey(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods 
 // initializes position, movement delta, and brightness for moving circles
 func initializeCircles() {
 	for i := 0; i < numCircles; i++ {
-		c := circle{
+		c := Circle{
 			xpos: (floatwidth / 2) + (random.Float64() * float64(direction()) * floatwidth * 0.5),
 			ypos: (floatheight / 2) + (random.Float64() * float64(direction()) * floatheight * 0.5),
 			radius: random.Float64() * floatwidth * 0.03,
 			xdelta: random.Float64() * float64(direction()) * floatwidth * 0.01,
 			ydelta: random.Float64() * float64(direction()) * floatheight * 0.01,
 			intensity: 255,
+			pauseCounter: 0,
 		}
 		circles[i] = c
 	}
@@ -138,24 +141,34 @@ func direction() int {
 	}
 }
 
-// updates moving circles
+// updates position and brightness of moving circles
 func updateCircles(angle int) {
-	if angle % 359 == 0 {
-		for i := range circles {
-			circle := circles[i]
+	for i := range circles {
+		circle := circles[i]
+		if shouldMoveCircle(circle, angle) {
 			circle.xpos = circle.xpos + circle.xdelta
 			circle.ypos = circle.ypos + circle.ydelta
 			circle.intensity = 255
-			circles[i] = circle
+			circle.pauseCounter = 50
+		} else {
+			circle.pauseCounter = circle.pauseCounter - 1
 		}
-	}
-	if angle % 4 == 0 {
-		for i := range circles {
-			circle := circles[i]
+		if angle % 4 == 0 {
 			circle.intensity = circle.intensity - 2
-			circles[i] = circle
 		}
+		circles[i] = circle
 	}
+}
+
+// returns whether the given circle lines up with the sweep angle, and should be updated or not
+func shouldMoveCircle(c Circle, sweepAngle int) bool {
+	angle := (math.Atan2(c.ypos - floatheight/2, c.xpos - floatwidth/2)) * 180 / math.Pi
+	if angle < 0 {
+		angle = 360 + angle
+	}
+	// the pause counter is used to prevent multiple consequtive moves for circles that only move a
+	// small amount each time
+	return int(angle) == sweepAngle && c.pauseCounter < 1
 }
 
 // draws the contents of the window
@@ -180,7 +193,7 @@ func drawContents(w *glfw.Window) {
 		gl.Flush() /* single buffered, so needs a flush. */
 		time.Sleep(2 * time.Millisecond)
 		w.SwapBuffers()
-		//time.Sleep(2 * time.Millisecond)
+		//time.Sleep(200 * time.Millisecond)
 	}
 }
 
