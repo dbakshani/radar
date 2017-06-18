@@ -162,7 +162,11 @@ func updateCircles(angle int) {
 
 // returns whether the given circle lines up with the sweep angle, and should be updated or not
 func shouldMoveCircle(c Circle, sweepAngle int) bool {
-	angle := (math.Atan2(c.ypos - floatheight/2, c.xpos - floatwidth/2)) * 180 / math.Pi
+	// position that circle would move to, relative to the center of the radar
+	xpos := (c.xpos + c.xdelta) - floatwidth/2
+	ypos := (c.ypos + c.ydelta) - floatheight/2
+	// use arctan to find angle in radians; convert to degrees
+	angle := math.Atan2(ypos, xpos) * 180 / math.Pi
 	if angle < 0 {
 		angle = 360 + angle
 	}
