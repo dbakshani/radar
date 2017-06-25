@@ -15,7 +15,7 @@ go get -u github.com/go-gl/glfw/v3.2/glfw
 Building
 --------
 ```
-go build -o main *.go
+go build
 ```
 
 Running
