@@ -21,7 +21,7 @@ go build
 Running
 -------
 ```
-./main
+./radar
 ```
 Hitting 'q' will quit the app at the end of the current sweep cycle.
 
