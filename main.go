@@ -15,21 +15,21 @@ import (
 )
 
 const (
-	numCircles = 20	//number of moving circles
+	numCircles = 20 //number of moving circles
 )
 
 var (
-	random *rand.Rand
+	random        *rand.Rand
 	width, height = 512.0, 512.0
 )
 
 type Circle struct {
 	xpos, ypos, radius, xdelta, ydelta float64
-	brightness int		//brightness of nircle drawn on screen
-	pauseCounter int	// how many ticks to wait before processing circle's position for potential movement
+	brightness                         int //brightness of nircle drawn on screen
+	pauseCounter                       int // how many ticks to wait before processing circle's position for potential movement
 }
 
-var circles [numCircles]Circle	// collection of all moving circles
+var circles [numCircles]Circle // collection of all moving circles
 
 // Called when the window is reshaped/resized.
 func reshape(window *glfw.Window, w, h int) {
@@ -121,12 +121,12 @@ func onKey(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods 
 func initializeCircles() {
 	for i := 0; i < numCircles; i++ {
 		c := Circle{
-			xpos: (width / 2) + (random.Float64() * float64(direction()) * width * 0.5),
-			ypos: (height / 2) + (random.Float64() * float64(direction()) * height * 0.5),
-			radius: random.Float64() * width * 0.03,
-			xdelta: random.Float64() * float64(direction()) * width * 0.01,
-			ydelta: random.Float64() * float64(direction()) * height * 0.01,
-			brightness: 255,
+			xpos:         (width / 2) + (random.Float64() * float64(direction()) * width * 0.5),
+			ypos:         (height / 2) + (random.Float64() * float64(direction()) * height * 0.5),
+			radius:       random.Float64() * width * 0.03,
+			xdelta:       random.Float64() * float64(direction()) * width * 0.01,
+			ydelta:       random.Float64() * float64(direction()) * height * 0.01,
+			brightness:   255,
 			pauseCounter: 0,
 		}
 		circles[i] = c
@@ -135,8 +135,8 @@ func initializeCircles() {
 
 // Returns a random +1 or -1 result. Can be used for a random left/right or up/down direction.
 func direction() int {
-	if random.Intn(2) % 2 == 0 {
-		return 1 
+	if random.Intn(2)%2 == 0 {
+		return 1
 	} else {
 		return -1
 	}
@@ -154,7 +154,7 @@ func updateCircles(angle int) {
 		} else {
 			circle.pauseCounter = circle.pauseCounter - 1
 		}
-		if angle % 4 == 0 {
+		if angle%4 == 0 {
 			circle.brightness = circle.brightness - 2
 		}
 		circles[i] = circle
@@ -214,9 +214,9 @@ func drawRadials(gc *draw2dgl.GraphicContext) {
 		gc.MoveTo(0, 0)
 		// uses the smaller of width/height to determine how long to draw the radials
 		if width > height {
-			gc.LineTo(height * 0.5, 0)
+			gc.LineTo(height*0.5, 0)
 		} else {
-			gc.LineTo(width * 0.5, 0)
+			gc.LineTo(width*0.5, 0)
 		}
 		gc.Stroke()
 		gc.Restore()
@@ -232,18 +232,18 @@ func drawConcentricCircles(gc *draw2dgl.GraphicContext) {
 	var radius float64
 	// uses the smaller of width/height to determine how big to make the circles
 	if width > height {
-		radius = height/2
+		radius = height / 2
 	} else {
-		radius = width/2
+		radius = width / 2
 	}
-	x := width/2
-	y := height/2
+	x := width / 2
+	y := height / 2
 	startAngle := 0.0
-	sweepAngle := 360 * (math.Pi / 180.0)	//clockwise in radians
+	sweepAngle := 360 * (math.Pi / 180.0) //clockwise in radians
 	gc.SetLineCap(draw2d.ButtCap)
 	for i := 1.0; i > 0; i = i - 0.3 { // reduction factor for concentric circles
-		gc.MoveTo(x + math.Cos(startAngle) * radius, y + math.Sin(startAngle) * radius)
-		gc.ArcTo(x, y, radius * i, radius * i, startAngle, sweepAngle)
+		gc.MoveTo(x+math.Cos(startAngle)*radius, y+math.Sin(startAngle)*radius)
+		gc.ArcTo(x, y, radius*i, radius*i, startAngle, sweepAngle)
 		gc.Stroke()
 	}
 }
@@ -253,17 +253,17 @@ func drawSweep(gc *draw2dgl.GraphicContext, angle int) {
 	var length float64
 	// uses the smaller of width/height to determine how long to draw the sweep radials
 	if width > height {
-		length = height/2
+		length = height / 2
 	} else {
-		length = width/2
+		length = width / 2
 	}
 	// draw multiple radials to create fading sweep
 	for i := 0; i < 60; i++ {
 		gc.Save()
 		gc.Translate(width/2, height/2)
 		gc.SetLineWidth(1)
-		gc.SetStrokeColor(color.RGBA{0, uint8(250 - 3 * i), 0, 0xff})	// draws each radial less bright
-		gc.Rotate((float64(angle) - float64(i) * 0.5) * (math.Pi / 180.0))
+		gc.SetStrokeColor(color.RGBA{0, uint8(250 - 3*i), 0, 0xff}) // draws each radial less bright
+		gc.Rotate((float64(angle) - float64(i)*0.5) * (math.Pi / 180.0))
 		gc.MoveTo(0, 0)
 		gc.LineTo(length, 0)
 		gc.Stroke()
@@ -280,9 +280,9 @@ func drawMovingCircle(gc *draw2dgl.GraphicContext, x, y, radius float64, brightn
 	gc.SetLineWidth(4)
 	gc.SetStrokeColor(color.RGBA{0, uint8(brightness), 0, 0xff})
 	startAngle := 0.0
-	sweepAngle := 360 * (math.Pi / 180.0)	//clockwise in radians
+	sweepAngle := 360 * (math.Pi / 180.0) //clockwise in radians
 	gc.SetLineCap(draw2d.ButtCap)
-	gc.MoveTo(x + math.Cos(startAngle) * radius, y + math.Sin(startAngle) * radius)
+	gc.MoveTo(x+math.Cos(startAngle)*radius, y+math.Sin(startAngle)*radius)
 	gc.ArcTo(x, y, radius, radius, startAngle, sweepAngle)
 	gc.Stroke()
 }
@@ -292,19 +292,18 @@ func drawMaskingCircle(gc *draw2dgl.GraphicContext) {
 	var radius float64
 	// uses the smaller of width/height to determine how big to make the circle
 	if width > height {
-		radius = height/2
+		radius = height / 2
 	} else {
-		radius = width/2
+		radius = width / 2
 	}
-	x := width/2
-	y := height/2
+	x := width / 2
+	y := height / 2
 	startAngle := 0.0
-	sweepAngle := 360 * (math.Pi / 180.0)	//clockwise in radians
+	sweepAngle := 360 * (math.Pi / 180.0) //clockwise in radians
 	gc.SetLineWidth(radius)
 	gc.SetStrokeColor(color.RGBA{0, 0, 0, 0xff})
 	gc.SetLineCap(draw2d.ButtCap)
-	gc.MoveTo(x + math.Cos(startAngle) * radius, y + math.Sin(startAngle) * radius)
-	gc.ArcTo(x, y, radius + (radius/2) + 1, radius + (radius/2) + 1, startAngle, sweepAngle)
+	gc.MoveTo(x+math.Cos(startAngle)*radius, y+math.Sin(startAngle)*radius)
+	gc.ArcTo(x, y, radius+(radius/2)+1, radius+(radius/2)+1, startAngle, sweepAngle)
 	gc.Stroke()
 }
-
